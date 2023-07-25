@@ -153,7 +153,7 @@ public class ChessGame {
             for (int j = 0; j < n; j++) {
                 if (board[i][j] == ' ') {
                     board[i][j] = 'O';
-                    int score = minimax(0, 'X', Integer.MIN_VALUE, Integer.MAX_VALUE);
+                    int score = minimax(3, 'X', Integer.MIN_VALUE, Integer.MAX_VALUE); // depth is set to 10 here
                     board[i][j] = ' ';
                     if (score > bestScore) {
                         bestScore = score;
@@ -165,6 +165,7 @@ public class ChessGame {
         }
         return bestMove;
     }
+
 
     private int evaluateBoard() {
         int score = 0;
@@ -208,7 +209,7 @@ public class ChessGame {
         // Base case - check if win or loss or draw, then return score
         if (checkWin('O')) { return Integer.MAX_VALUE; }
         else if (checkWin('X')) { return Integer.MIN_VALUE; }
-        else if (boardFull() || depth == 0) { return evaluateBoard(); }
+        else if (boardFull() || depth == 0) { return evaluateBoard(); } // depth == 0 is the base case to stop recursion
         if (player == 'O') {
             int maxEval = Integer.MIN_VALUE;
             // loop through all possible moves
@@ -218,7 +219,7 @@ public class ChessGame {
                     if (board[i][j] == ' ') {
                         // Make move
                         board[i][j] = player;
-                        int eval = minimax(depth -1, 'X', alpha, beta);
+                        int eval = minimax(depth - 1, 'X', alpha, beta); // depth is decreased by 1 here
                         // Undo move
                         board[i][j] = ' ';
                         maxEval = Math.max(maxEval, eval);
@@ -238,7 +239,7 @@ public class ChessGame {
                     if (board[i][j] == ' ') {
                         // Make move
                         board[i][j] = player;
-                        int eval = minimax(depth -1, 'O', alpha, beta);
+                        int eval = minimax(depth - 1, 'O', alpha, beta); // depth is decreased by 1 here
                         // Undo move
                         board[i][j] = ' ';
                         minEval = Math.min(minEval, eval);
