@@ -153,7 +153,7 @@ public class ChessGame {
             for (int j = 0; j < n; j++) {
                 if (board[i][j] == ' ') {
                     board[i][j] = 'O';
-                    int score = minimax(2, 'X', Integer.MIN_VALUE, Integer.MAX_VALUE); // depth is set to 10 here
+                    int score = minimax(1, 'X', Integer.MIN_VALUE, Integer.MAX_VALUE); // depth is set to 10 here
                     board[i][j] = ' ';
                     if (score > bestScore) {
                         bestScore = score;
@@ -185,19 +185,31 @@ public class ChessGame {
         return score;
     }
 
+
+
     private int evaluateLine(int x, int y, int dx, int dy){
         int humanPoints = 0, aiPoints = 0;
         for(int i = 0; i < m; i++){
             if(isInsideBoard(x+dx*i, y+dy*i)){
                 if(board[x+dx*i][y+dy*i] == 'X') humanPoints++;
                 if(board[x+dx*i][y+dy*i] == 'O') aiPoints++;
+
             }
+
         }
         if(humanPoints > 0 && aiPoints > 0) return 0;
-        else if(aiPoints == m) return 100000; // win condition for AI
-        else if(humanPoints == m) return -100000; // win condition for human
-        else if(aiPoints == 0 && humanPoints == m-1) return -10000; // one move away from human win
-        else if(humanPoints == 0 && aiPoints == m-1) return 10000; // one move away from AI win
+        else if(aiPoints == m) return Integer.MAX_VALUE; // win condition for AI
+        else if(humanPoints == m) return Integer.MIN_VALUE; // win condition for human
+        else if(humanPoints == m-1 && aiPoints == 0) return -9000; //with no barrier
+        else if(aiPoints == m-1 && humanPoints == 0) return 10000; //with no barrier
+        else if(humanPoints == m-1 && aiPoints == 1) return -5000; //with no barrier
+        else if(aiPoints == m-1 && humanPoints == 1) return 5000; //with no barrier
+        else if(humanPoints == 1) return 10; //with no barrier
+        else if(aiPoints == 1) return 10; //with no barrier
+        else if(humanPoints == 2) return 300; //with no barrier
+        else if(aiPoints == 2) return 300; //with no barrier
+        else if(humanPoints == 3 && m >3) return 500; //with no barrier
+        else if(aiPoints == 3 && m >3) return 500; //with no barrier
         else return aiPoints - humanPoints;
     }
 
@@ -307,6 +319,12 @@ public class ChessGame {
         }
         return false; }
 
+
+    /*private static boolean checkSign(int a){
+        if(a==1){return false;}
+        else if(a == 2){return true;}
+        return true;
+    }*/
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
         System.out.println("Enter the size of the board: ");
@@ -315,6 +333,7 @@ public class ChessGame {
         int m = scanner.nextInt();
         System.out.println("Who moves first? 1 for player, 2 for computer: ");
         int firstMove = scanner.nextInt();
+        //checkSign(firstMove);
         ChessGame game = new ChessGame(n, m, firstMove == 1);
         game.playGame();
     }
