@@ -1,5 +1,4 @@
 package src;
-
 import java.util.Random;
 import java.util.Scanner;
 
@@ -148,30 +147,109 @@ public class ChessGame {
 
 
     private int[] findBestMove() {
-        Random random = new Random();
-        int row, col;
-        boolean[][] moveMade = new boolean[n][n]; // Keep track of the moves already made
-        do {
-            row = random.nextInt(n); // Generate a random row index within the range [0, n-1]
-            col = random.nextInt(n);
-        } while (!isMoveValid(row, col) || moveMade[row][col]||(row == 0 && col == 0)); // Repeat until a valid and unmade move is found
-        moveMade[row][col] = true; // Mark the move as made
-        return new int[] {row, col};
+        int bestScore = Integer.MIN_VALUE;
+        int[] bestMove = new int[2];
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                if (board[i][j] == ' ') {
+                    board[i][j] = 'O';
+                    int score = minimax(0, 'X', Integer.MIN_VALUE, Integer.MAX_VALUE);
+                    board[i][j] = ' ';
+                    if (score > bestScore) {
+                        bestScore = score;
+                        bestMove[0] = i;
+                        bestMove[1] = j;
+                    }
+                }
+            }
+        }
+        return bestMove;
+    }
+
+    private int evaluateBoard() {
+        int score = 0;
+
+        // You can create a 4D array to easily check all possible lines of length m
+        int[][] directions = {{1,0}, {0,1}, {1,1}, {1,-1}};
+        for(int x = 0; x < n; x++){
+            for(int y = 0; y < n; y++){
+                if(board[x][y] == ' '){
+                    for(int[] d : directions){
+                        score += evaluateLine(x, y, d[0], d[1]);
+                    }
+                }
+            }
+        }
+        return score;
+    }
+
+    private int evaluateLine(int x, int y, int dx, int dy){
+        int humanPoints = 0, aiPoints = 0;
+        for(int i = 0; i < m; i++){
+            if(isInsideBoard(x+dx*i, y+dy*i)){
+                if(board[x+dx*i][y+dy*i] == 'X') humanPoints++;
+                if(board[x+dx*i][y+dy*i] == 'O') aiPoints++;
+            }
+        }
+        if(humanPoints > 0 && aiPoints > 0) return 0;
+        else if(aiPoints == m) return 100000; // win condition for AI
+        else if(humanPoints == m) return -100000; // win condition for human
+        else if(aiPoints == 0 && humanPoints == m-1) return -10000; // one move away from human win
+        else if(humanPoints == 0 && aiPoints == m-1) return 10000; // one move away from AI win
+        else return aiPoints - humanPoints;
+    }
+
+    private boolean isInsideBoard(int x, int y){
+        return x >= 0 && x < n && y >= 0 && y < n;
     }
 
 
-    private boolean isMoveValid(int row, int col) {
-        // Check if the move is within the board
-        if (row < 0 || row >= n || col < 0 || col >= n) {
-            return false;
+    private int minimax(int depth, char player, int alpha, int beta) {
+        // Base case - check if win or loss or draw, then return score
+        if (checkWin('O')) { return Integer.MAX_VALUE; }
+        else if (checkWin('X')) { return Integer.MIN_VALUE; }
+        else if (boardFull() || depth == 0) { return evaluateBoard(); }
+        if (player == 'O') {
+            int maxEval = Integer.MIN_VALUE;
+            // loop through all possible moves
+            for (int i = 0; i < n; i++) {
+                for (int j = 0; j < n; j++) {
+                    // Check if spot is empty
+                    if (board[i][j] == ' ') {
+                        // Make move
+                        board[i][j] = player;
+                        int eval = minimax(depth -1000000, 'X', alpha, beta);
+                        // Undo move
+                        board[i][j] = ' ';
+                        maxEval = Math.max(maxEval, eval);
+                        alpha = Math.max(alpha, eval);
+                        if (beta <= alpha)
+                            break;
+                    }
+                }
+            }
+            return maxEval;
+        } else { // If player is X
+            int minEval = Integer.MAX_VALUE;
+            // loop through all possible moves
+            for (int i = 0; i < n; i++) {
+                for (int j = 0; j < n; j++) {
+                    // Check if spot is empty
+                    if (board[i][j] == ' ') {
+                        // Make move
+                        board[i][j] = player;
+                        int eval = minimax(depth -1000000, 'O', alpha, beta);
+                        // Undo move
+                        board[i][j] = ' ';
+                        minEval = Math.min(minEval, eval);
+                        beta = Math.min(beta, eval);
+                        if (beta <= alpha)
+                            break;
+                    }
+                }
+            }
+            return minEval;
         }
-
-        // Check if the specified cell is empty
-        if (board[row][col] != ' ') {
-            return false;
-        }
-
-        return true;
     }
 
 
