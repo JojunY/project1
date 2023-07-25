@@ -149,22 +149,33 @@ public class ChessGame {
     private int[] findBestMove() {
         int bestScore = Integer.MIN_VALUE;
         int[] bestMove = new int[2];
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < n; j++) {
-                if (board[i][j] == ' ') {
-                    board[i][j] = 'O';
-                    int score = minimax(3, 'X', Integer.MIN_VALUE, Integer.MAX_VALUE); // depth is set to 10 here
-                    board[i][j] = ' ';
-                    if (score > bestScore) {
-                        bestScore = score;
-                        bestMove[0] = i;
-                        bestMove[1] = j;
+
+        // Define the maximum depth up to which the game tree will be explored
+        int MAX_DEPTH = 10; // You can adjust this value as needed
+
+        for (int depth = 0; ; depth++) {
+            for (int i = 0; i < n; i++) {
+                for (int j = 0; j < n; j++) {
+                    if (board[i][j] == ' ') {
+                        board[i][j] = 'O';
+                        int score = minimax(depth, 'X', Integer.MIN_VALUE, Integer.MAX_VALUE);
+                        board[i][j] = ' ';
+                        if (score > bestScore) {
+                            bestScore = score;
+                            bestMove[0] = i;
+                            bestMove[1] = j;
+                        }
                     }
                 }
             }
+            if (checkWin('O') || checkWin('X') || depth == MAX_DEPTH) {
+                break;
+            }
         }
+
         return bestMove;
     }
+
 
 
     private int evaluateBoard() {
@@ -219,7 +230,7 @@ public class ChessGame {
                     if (board[i][j] == ' ') {
                         // Make move
                         board[i][j] = player;
-                        int eval = minimax(depth - 1, 'X', alpha, beta); // depth is decreased by 1 here
+                        int eval = minimax(depth-1, 'X', alpha, beta); // depth is decreased by 1 here
                         // Undo move
                         board[i][j] = ' ';
                         maxEval = Math.max(maxEval, eval);
@@ -239,7 +250,7 @@ public class ChessGame {
                     if (board[i][j] == ' ') {
                         // Make move
                         board[i][j] = player;
-                        int eval = minimax(depth - 1, 'O', alpha, beta); // depth is decreased by 1 here
+                        int eval = minimax(depth-1, 'O', alpha, beta); // depth is decreased by 1 here
                         // Undo move
                         board[i][j] = ' ';
                         minEval = Math.min(minEval, eval);
