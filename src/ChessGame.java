@@ -12,8 +12,8 @@ public class ChessGame {
     public ChessGame(int n, int m, boolean playerTurn) {
         this.n = n;
         this.m = m;
-        this.board = new char[n+1][n];
-        for (int i = 0; i < n+1; i++) {
+        this.board = new char[n][n];
+        for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
                 board[i][j] = ' '; // Initialize the board with empty spaces
             }
@@ -35,37 +35,46 @@ public class ChessGame {
 
     public void playGame() {
         Scanner scanner = new Scanner(System.in);
-        while (true) {
-            printBoard();
-            char currentPlayer;
+
+        while (!boardFull() && !checkWin('X') && !checkWin('O')) {
             if (playerTurn) {
+                printBoard();
                 System.out.println("Enter your move (row column): ");
                 int row = scanner.nextInt();
                 int col = scanner.nextInt();
-                makeMove(row , col - 1, 'X'); // Player is represented by 'X'
-                currentPlayer = 'X';
+                while (!makeMove(row-1 , col-1 , 'X')) { // Player is represented by 'X'
+                    System.out.println("Invalid move, try again.");
+                    System.out.println("Enter your move (row column): ");
+                    row = scanner.nextInt();
+                    col = scanner.nextInt();
+                }
+                if (checkWin('X')) {
+                    printBoard();
+                    System.out.println("Player X wins!");
+                    break;
+                }
             } else {
                 System.out.println("Computer is making a move...");
                 int[] move = findBestMove();
-                int a,b = 0;
-                a = move[0];
-                b = move[1];
-                System.out.println("Computer is moved to "+ "0"+ a + " "+"0"+b);
-                makeMove(move[0], move[1]-1, 'O'); // Computer is represented by 'O'
-                currentPlayer = 'O';
-            }
-            playerTurn = !playerTurn;
-
-
-            if (checkWin(currentPlayer)) {
-
-                System.out.println("Player " + (currentPlayer == 'X' ? "X" : "O") + " wins!");
-                break;
+                makeMove(move[0], move[1], 'O'); // Computer is represented by 'O'
+                System.out.println("Computer moved to "+ (move[0]+1) + " "+(move[1]+1));
+                if (checkWin('O')) {
+                    printBoard();
+                    System.out.println("Computer wins!");
+                    break;
+                }
             }
 
+            playerTurn = !playerTurn; // Switch the turn
+        }
 
+        if (boardFull() && !checkWin('X') && !checkWin('O')) {
+            printBoard();
+            System.out.println("The game is a draw.");
         }
     }
+
+
 
 
     private void printBoard() {
@@ -74,21 +83,23 @@ public class ChessGame {
         for (int i = 1; i <= n; i++) {
             if (i <= 9){
                 System.out.print("0"+ i + "  ");
-
             }
             else
-            {System.out.print(i + "  ");}
+            {
+                System.out.print(i + "  ");
+            }
         }
         System.out.println();
 
         // Print the board rows with separators
-        for (int i = 1; i <= n; i++) {
-            if (i <= 9){
-                System.out.print("0"+ i );
+        for (int i = 0; i < n; i++) {
+            if (i+1 <= 9){
+                System.out.print("0"+ (i+1) );
             }
             else
-            {System.out.print(i);}
-
+            {
+                System.out.print(i+1);
+            }
 
             // Print row cells with vertical separators
             for (int j = 0; j <n; j++) {
@@ -97,7 +108,7 @@ public class ChessGame {
             System.out.println("|");
 
             // Print horizontal row separator
-            if (i < n ) {
+            if (i < n - 1) {
                 System.out.print("  ");
                 for (int j = 0; j < n; j++) {
                     System.out.print("----");
@@ -109,8 +120,10 @@ public class ChessGame {
     }
 
 
+
     private boolean makeMove(int row, int col, char player) {
         // Check if the move is within the board
+
         if (row < 0 || row > n || col < 0 || col >= n) {
             System.out.println("Invalid move. Position is outside the board.");
             return false;
