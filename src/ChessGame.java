@@ -146,33 +146,23 @@ public class ChessGame {
     }
 
 
-    private int[] findBestMove() {
+    int[] findBestMove() {
         int bestScore = Integer.MIN_VALUE;
         int[] bestMove = new int[2];
-
-        // Define the maximum depth up to which the game tree will be explored
-        int MAX_DEPTH = 10; // You can adjust this value as needed
-
-        for (int depth = 0; ; depth++) {
-            for (int i = 0; i < n; i++) {
-                for (int j = 0; j < n; j++) {
-                    if (board[i][j] == ' ') {
-                        board[i][j] = 'O';
-                        int score = minimax(depth, 'X', Integer.MIN_VALUE, Integer.MAX_VALUE);
-                        board[i][j] = ' ';
-                        if (score > bestScore) {
-                            bestScore = score;
-                            bestMove[0] = i;
-                            bestMove[1] = j;
-                        }
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                if (board[i][j] == ' ') {
+                    board[i][j] = 'O';
+                    int score = minimax(2, 'X', Integer.MIN_VALUE, Integer.MAX_VALUE); // depth is set to 10 here
+                    board[i][j] = ' ';
+                    if (score > bestScore) {
+                        bestScore = score;
+                        bestMove[0] = i;
+                        bestMove[1] = j;
                     }
                 }
             }
-            if (checkWin('O') || checkWin('X') || depth == MAX_DEPTH) {
-                break;
-            }
         }
-
         return bestMove;
     }
 
