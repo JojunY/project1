@@ -190,22 +190,25 @@ public class ChessGame {
 
         if (aiPoints == m) return 10000; // AI has five in a row
         if (humanPoints == m) return -10000; // Human has five in a row
-        if (humanPoints == m-1 && aiPoints == 0 && m>3) return -9050; // Human has a live four
-        if (aiPoints == m-1 && humanPoints == 0 && m>3) return 9030; // AI has a live four
-        if (aiPoints == m-1 && humanPoints == 1 && m>3) return 9010; // AI has a live four
-        if (humanPoints == m-1 && aiPoints == 1 && m>3) return -9020;
-        if (aiPoints == m-2 && humanPoints == 1 && m>3) return 8980; // AI has a live four
-        if (humanPoints == m-2 && aiPoints == 1 && m>3) return -8990;
-        if (aiPoints == m-2 && humanPoints == 0 && m>3) return 9000; // AI has a live four
-        if (humanPoints == m-2 && aiPoints == 0 && m>3) return -9010;
-        // AI has a live four
+        if (m > 3) {
+            if (humanPoints == m-1 && aiPoints == 0) return -9050; // Human has a live four
+            if (aiPoints == m-1 && humanPoints == 0) return 9030; // AI has a live four
+            if (aiPoints == m-1 && humanPoints == 1) return 9010; // AI has a live four
+            if (humanPoints == m-1 && aiPoints == 1) return -9020;
+            if (aiPoints == m-2 && humanPoints == 1) return 8980; // AI has a live four
+            if (humanPoints == m-2 && aiPoints == 1) return -8990;
+            if (aiPoints == m-2 && humanPoints == 0) return 9000; // AI has a live four
+            if (humanPoints == m-2 && aiPoints == 0) return -9010;
+        }
 
-        else if(aiPoints == 1) aiPoints+=50; //with no barrier
-        else if(humanPoints == 2) humanPoints+=200; //with no barrier
-        else if(aiPoints == 2) aiPoints+=150; //with no barrier
-        else if(humanPoints == 1) humanPoints+=100; //with no barrier
-        else if(aiPoints == 3 ) aiPoints+=250; //with no barrier
-        else if(humanPoints == 3 ) humanPoints+=300; //with no barrier
+        // AI has a live four
+        if(aiPoints == 1) aiPoints += 50; //with no barrier
+        if(humanPoints == 2) humanPoints += 200; //with no barrier
+        if(aiPoints == 2) aiPoints += 150; //with no barrier
+        if(humanPoints == 1) humanPoints += 100; //with no barrier
+        if(aiPoints == 3) aiPoints += 250; //with no barrier
+        if(humanPoints == 3) humanPoints += 300; //with no barrier
+
         return aiPoints - humanPoints;
     }
 
