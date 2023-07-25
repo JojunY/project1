@@ -203,13 +203,15 @@ public class ChessGame {
         else if(humanPoints == m-1 && aiPoints == 0) return -9000; //with no barrier
         else if(aiPoints == m-1 && humanPoints == 0) return 10000; //with no barrier
         else if(humanPoints == m-1 && aiPoints == 1) return -5000; //with no barrier
-        else if(aiPoints == m-1 && humanPoints == 1) return 5000; //with no barrier
-        else if(humanPoints == 1) return 10; //with no barrier
-        else if(aiPoints == 1) return 10; //with no barrier
-        else if(humanPoints == 2) return 300; //with no barrier
-        else if(aiPoints == 2) return 300; //with no barrier
-        else if(humanPoints == 3 && m >3) return 500; //with no barrier
-        else if(aiPoints == 3 && m >3) return 500; //with no barrier
+        else if(aiPoints == m-1 && humanPoints == 1) return 6000; //with no barrier
+        else if(humanPoints == m-2 && aiPoints == 0 && m>=5) return -2000; //with no barrier
+        else if(aiPoints == m-2 && humanPoints == 0 && m>=5) return 3000; //with no barrier
+        else if(humanPoints == 1) return -100; //with no barrier
+        else if(aiPoints == 1) return 100; //with no barrier
+        else if(humanPoints == 2) return -500; //with no barrier
+        else if(aiPoints == 2) return 500; //with no barrier
+        else if(humanPoints == 3 && m >3) return -800; //with no barrier
+        else if(aiPoints == 3 && m >3) return 900; //with no barrier
         else return aiPoints - humanPoints;
     }
 
