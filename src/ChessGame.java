@@ -1,5 +1,6 @@
 package src;
 
+import java.util.Random;
 import java.util.Scanner;
 
 public class ChessGame {
@@ -20,26 +21,52 @@ public class ChessGame {
         this.playerTurn = playerTurn;
     }
 
+    public boolean boardFull() {
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                if (board[i][j] == ' ') {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+
     public void playGame() {
         Scanner scanner = new Scanner(System.in);
         while (true) {
             printBoard();
+            char currentPlayer;
             if (playerTurn) {
                 System.out.println("Enter your move (row column): ");
                 int row = scanner.nextInt();
                 int col = scanner.nextInt();
-                makeMove(row - 1, col - 1, 'X'); // Player is represented by 'X'
+                makeMove(row , col - 1, 'X'); // Player is represented by 'X'
+                currentPlayer = 'X';
             } else {
                 System.out.println("Computer is making a move...");
                 int[] move = findBestMove();
-                makeMove(move[0], move[1], 'O'); // Computer is represented by 'O'
+                int a,b = 0;
+                a = move[0];
+                b = move[1];
+                System.out.println("Computer is moved to "+ "0"+ a + " "+"0"+b);
+                makeMove(move[0], move[1]-1, 'O'); // Computer is represented by 'O'
+                currentPlayer = 'O';
             }
             playerTurn = !playerTurn;
-            if (checkWin()) {
+
+
+            if (checkWin(currentPlayer)) {
+
+                System.out.println("Player " + (currentPlayer == 'X' ? "X" : "O") + " wins!");
                 break;
             }
+
+
         }
     }
+
 
     private void printBoard() {
         // Print column numbers
@@ -82,20 +109,110 @@ public class ChessGame {
     }
 
 
-    private void makeMove(int row, int col, char player) {
-        // Implement this method to make a move on the board
+    private boolean makeMove(int row, int col, char player) {
+        // Check if the move is within the board
+        if (row < 0 || row > n || col < 0 || col >= n) {
+            System.out.println("Invalid move. Position is outside the board.");
+            return false;
+
+        }
+
+        // Check if the specified cell is empty
+        if (board[row][col] != ' ') {
+            System.out.println("Invalid move. The cell is already occupied.");
+            return false;
+        }
+
+        if (boardFull()){
+            System.out.println("It is draw");
+            return false;
+        }
+
+        // Make the move
         board[row][col] = player;
+        return true;
     }
+
 
     private int[] findBestMove() {
-        // Implement this method to use alpha-beta pruning to find the best move
-        return new int[2]; // replace this
+        Random random = new Random();
+        int row, col;
+        boolean[][] moveMade = new boolean[n][n]; // Keep track of the moves already made
+        do {
+            row = random.nextInt(n); // Generate a random row index within the range [0, n-1]
+            col = random.nextInt(n);
+        } while (!isMoveValid(row, col) || moveMade[row][col]||(row == 0 && col == 0)); // Repeat until a valid and unmade move is found
+        moveMade[row][col] = true; // Mark the move as made
+        return new int[] {row, col};
     }
 
-    private boolean checkWin() {
-        // Implement this method to check if the game is won
-        return false; // replace this
+
+    private boolean isMoveValid(int row, int col) {
+        // Check if the move is within the board
+        if (row < 0 || row >= n || col < 0 || col >= n) {
+            return false;
+        }
+
+        // Check if the specified cell is empty
+        if (board[row][col] != ' ') {
+            return false;
+        }
+
+        return true;
     }
+
+
+    private boolean checkWin(char player) {
+        // Implement this method to check if the game is won
+        //check horizontal line
+        for (int i = 0; i < n ; i++) {
+            for(int j = 0;j<n-m+1;j++) {
+                int k;
+                for(k = 0; k < m; k++) {
+                    if(board[i][j+k] != player)
+                        break;
+                }
+                if (k == m)
+                    return true;
+            }
+        }
+
+        //check vertical line
+        for (int i = 0; i < n-m+1 ; i++) {
+            for(int j = 0;j<n;j++) {
+                int k;
+                for(k = 0; k < m; k++) {
+                    if(board[i+k][j] != player)
+                        break;
+                }
+                if (k == m)
+                    return true;
+            }
+        }
+
+        //check diagonals line from top right to bottom left
+        for(int i=0; i<n-m+1;i++) {
+            for(int j = 0; j<n-m+1; j++) {
+                boolean diagonalsignals = true;
+                boolean notdiagonals = true;
+
+                for(int k = 0; k < m; k++) {
+                    if(board[i+k][j+k] != player) {
+                        diagonalsignals = false;
+                    }
+                    if(board[i+k][j+m-1-k] != player){
+                        notdiagonals = false;
+                    }
+                }
+                if (diagonalsignals || notdiagonals) {
+                    return true;
+                }
+                //check diagonals line from top left to bottom right
+
+                // replace this
+            }
+        }
+        return false; }
 
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
