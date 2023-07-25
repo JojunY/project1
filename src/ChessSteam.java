@@ -1,6 +1,7 @@
 package src;
 
 import java.io.File;
+import java.io.IOException;
 
 /**
  * @author:Aurora
@@ -9,8 +10,8 @@ import java.io.File;
  */
 public class ChessSteam {
     static class Axis {
-        private int x;
-        private int y;
+        private int x = -1;
+        private int y = -1;
 
         public int getX() {
             return x;
@@ -38,67 +39,54 @@ public class ChessSteam {
         }
     }
 
-    private File outFile;
-    private File inFile;
-    private String OutFolderPath = "C:\\out";
-    private String InFolderPath = "C:\\in";
-    private long MyLastMoveTimeTamp = 0;    // 产生Out输出时，会记录这个值
-
+    private String OutFolderPath = "C:\\out"; //记录
+    private String InFolderPath = "C:\\in"; //读取对方，删除
+    Axis TempInAxis;
 
     /**
-     * 检测对手放在Out目录中最新的坐标文件，返回坐标对象
-     * 附带坐标名格式检测, 文件夹检测, 文件检测, 对方文件检测
+     * 检测对手放在int目录中最新的坐标文件，返回坐标对象
+     * 文件和文件夹空检测，
+     * In文件检测（当In文件夹存在多个文件时，说明对面没有Cut文件，当In不存在文件时，我方先手或等待读取，当In存在一个文件，对方已经落子，我方会进行算法和Cut处理）
+     *
      * @return
      */
-    public Axis ReadFromOut() {
-        int FileCount = 0;
-        File folder = new File(this.OutFolderPath);
+    public Axis ReadFromIn() {
+        File folder = new File(this.InFolderPath);
 
-        if (!folder.exists() && !folder.isDirectory()){
+        if (!folder.exists() && !folder.isDirectory()) {
             System.out.println("文件夹不存在,请创建文件夹");
             return Axis.build(-1, -1);//文件夹不存在
-        };
-        File[] files = folder.listFiles();// get all files in out
-        if (files != null) FileCount = files.length;
-        if (FileCount == 0) {
-            System.out.println("Out文件夹内为空");
-            return Axis.build(-1, -1);// 意味着我们先手, 返回Axis的xy都为-1
+        }
+        File[] files = folder.listFiles();// 取得全部文件
+        int FileCount = files.length;
+        if (FileCount != 1) {
+            System.out.println("请检查对方是否删除历史坐标文件");
+            return Axis.build(-1, -1);// In存在2个文件，可能对方没删除
         }
 
+        TempInAxis = Axis.build(Integer.parseInt(files[0].getName().substring(0, 2)), Integer.parseInt(files[0].getName().substring(2, 4)));
 
-        long MinTime = System.currentTimeMillis() - files[0].lastModified();
-        long temp;
-        int j = 0; //目标文件
-        int i = 0;
-
-        while (i + 1 <= FileCount) {
-            if (files[i].getName().matches("[0-9]\\{4}")){
-                System.out.println("您的文件名存在问题,暂时不支持本程序读入");
-                return Axis.build(-1, -1);
-            }
-            // 寻找最近的修改时间，最后修改文件
-            temp = System.currentTimeMillis() - files[i].lastModified();
-            if (temp < MinTime) {
-                MinTime = temp;
-                j = i;
-            }
-            i++;
-        }
-        // 判断 对方最新文件是否存在, 与 自己的 In文件全局时间戳比较（存在于Out的）
-        if (MyLastMoveTimeTamp == files[j].lastModified()){
-            System.out.println("最新的Out文件夹文件为我方提供, 请对方移动并输出");
+        //Cut对方的坐标文件到out中
+        String CutFilePath = OutFolderPath + "\\" + files[0].getName();
+        File newFile = new File(CutFilePath);
+        boolean renamed = files[0].renameTo(newFile);
+        if (!renamed){
+            System.out.println("Cut失败");
             return Axis.build(-1, -1);
         }
-        return Axis.build(Integer.parseInt(files[j].getName().substring(0, 2)),Integer.parseInt(files[j].getName().substring(2, 4)));
+
+        return TempInAxis;
     }
 
     /**
-     *  Out计时器, 入口方法
+     * Out计时器, 入口方法
      * @return
      */
-    public Axis ReadFromOutTimer(){
+    public Axis ReadFromInTimer() {
 
-        while (ReadFromOut().getX() == -1 || ReadFromOut().getY() == -1) {
+        ReadFromIn();
+
+        while (TempInAxis.getX() == -1 || TempInAxis.getY() == -1) {
             System.out.println("正在等待对手的坐标");
             try {
                 Thread.sleep(5000);
@@ -106,6 +94,23 @@ public class ChessSteam {
                 throw new RuntimeException(e);
             }
         }
-        return ReadFromOut();
+        return TempInAxis;
+    }
+
+    public Boolean WriteMyMoveToIn(int a, int b) {
+        if (a == 0 || b == 0)return false;
+        String A = "";
+        String B = "";
+        if (a < 10 && a>0) A = "0"+ a;
+        if (b < 10 && b>0) B = "0"+b;
+
+        String MoveInPath = InFolderPath + "\\" + A + B;
+        File MyMove = new File(MoveInPath);
+
+        try {
+            return MyMove.createNewFile();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
