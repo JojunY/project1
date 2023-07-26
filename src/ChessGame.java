@@ -192,12 +192,12 @@ public class ChessGame {
         if (humanPoints == m) return -10000; // Human has five in a row
         if (m > 3) {
             if (humanPoints == m-1 && aiPoints == 0) return -9050; // Human has a live four
-            if (aiPoints == m-1 && humanPoints == 0) return 9030; // AI has a live four
-            if (aiPoints == m-1 && humanPoints == 1) return 9010; // AI has a live four
+            if (aiPoints == m-1 && humanPoints == 0) return 9030; // 
+            if (aiPoints == m-1 && humanPoints == 1) return 9010; //
             if (humanPoints == m-1 && aiPoints == 1) return -9020;
-            if (aiPoints == m-2 && humanPoints == 1) return 8980; // AI has a live four
+            if (aiPoints == m-2 && humanPoints == 1) return 8980; //
             if (humanPoints == m-2 && aiPoints == 1) return -8990;
-            if (aiPoints == m-2 && humanPoints == 0) return 9000; // AI has a live four
+            if (aiPoints == m-2 && humanPoints == 0) return 9000; //
             if (humanPoints == m-2 && aiPoints == 0) return -9010;
         }
 
