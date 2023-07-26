@@ -1,11 +1,13 @@
 package src;
-import java.util.Random;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 public class ChessGame {
     private char[][] board;
     private int n;
     private int m;
+
     private boolean playerTurn;
 
     public ChessGame(int n, int m, boolean playerTurn) {
@@ -34,18 +36,24 @@ public class ChessGame {
 
     public void playGame() {
         Scanner scanner = new Scanner(System.in);
+        System.out.println("type the input path");
+        String inputPath = scanner.next();
+        System.out.println("type the output path");
+        String outputPath = scanner.next();
+        ChessSteam chessSteam = new ChessSteam();
 
         while (!boardFull() && !checkWin('X') && !checkWin('O')) {
             if (playerTurn) {
+
                 printBoard();
-                System.out.println("Enter your move (row column): ");
-                int row = scanner.nextInt();
-                int col = scanner.nextInt();
+                System.out.println("Scan opposite file .......: ");
+                List<Integer> xy = chessSteam.ReadFromInTimer(outputPath).getXY();
+                int row = xy.get(1);
+                int col = xy.get(0);
+                chessSteam.WriteMyMoveToIn(col,row,inputPath);
                 while (!makeMove(row - 1, col - 1, 'X')) { // Player is represented by 'X'
                     System.out.println("Invalid move, try again.");
-                    System.out.println("Enter your move (row column): ");
-                    row = scanner.nextInt();
-                    col = scanner.nextInt();
+
                 }
                 if (checkWin('X')) {
                     printBoard();
@@ -56,7 +64,9 @@ public class ChessGame {
                 System.out.println("Computer is making a move...");
                 int[] move = findBestMove();
                 makeMove(move[0], move[1], 'O'); // Computer is represented by 'O'
-                System.out.println("Computer moved to " + (move[0] + 1) + " " + (move[1] + 1));
+                chessSteam.WriteMyMoveToIn(move[1], move[0], outputPath);
+                chessSteam.ReadFromInTimer(inputPath);
+                System.out.println("Computer moved to " + (move[1] + 1) + " " + (move[0] + 1));
                 if (checkWin('O')) {
                     printBoard();
                     System.out.println("Computer wins!");
@@ -72,6 +82,7 @@ public class ChessGame {
             System.out.println("The game is a draw.");
         }
     }
+
 
 
     private void printBoard() {
@@ -146,7 +157,7 @@ public class ChessGame {
             for (int j = 0; j < n; j++) {
                 if (board[i][j] == ' ') {
                     board[i][j] = 'O';
-                    int score = minimax(1, 'X', Integer.MIN_VALUE, Integer.MAX_VALUE); // depth is set to 10 here
+                    int score = minimax(2, 'X', Integer.MIN_VALUE, Integer.MAX_VALUE); // depth is set to 10 here
                     board[i][j] = ' ';
                     if (score > bestScore) {
                         bestScore = score;
@@ -188,27 +199,22 @@ public class ChessGame {
             }
         }
 
-        if (aiPoints == m) return 10000; // AI has five in a row
-        if (humanPoints == m) return -10000; // Human has five in a row
-        if (m > 3) {
-            if (humanPoints == m-1 && aiPoints == 0) return -9050; // Human has a live four
-            if (aiPoints == m-1 && humanPoints == 0) return 9030; // 
-            if (aiPoints == m-1 && humanPoints == 1) return 9010; //
-            if (humanPoints == m-1 && aiPoints == 1) return -9020;
-            if (aiPoints == m-2 && humanPoints == 1) return 8980; //
-            if (humanPoints == m-2 && aiPoints == 1) return -8990;
-            if (aiPoints == m-2 && humanPoints == 0) return 9000; //
-            if (humanPoints == m-2 && aiPoints == 0) return -9010;
-        }
+        if (aiPoints == m) return Integer.MIN_VALUE; // AI has five in a row
+        if (humanPoints == m) return Integer.MAX_VALUE; // Human has five in a row
+        if (humanPoints == m-1 && aiPoints == 0) return -11000; // Human has a live four
+        if (aiPoints == m-1 && humanPoints == 0) return 10000; //
+        if (aiPoints == m-1 && humanPoints == 1) return 5000; //
+        if (humanPoints == m-1 && aiPoints == 1) return -6000;
+        if (aiPoints == m-2 && humanPoints == 1) return 2500; //
+        if (humanPoints == m-2 && aiPoints == 1) return -2000;
+        if (aiPoints == m-2 && humanPoints == 0) return 4500; //
+        if (humanPoints == m-2 && aiPoints == 0) return -4000;
 
         // AI has a live four
-        if(aiPoints == 1) aiPoints += 50; //with no barrier
-        if(humanPoints == 2) humanPoints += 200; //with no barrier
-        if(aiPoints == 2) aiPoints += 150; //with no barrier
-        if(humanPoints == 1) humanPoints += 100; //with no barrier
-        if(aiPoints == 3) aiPoints += 250; //with no barrier
-        if(humanPoints == 3) humanPoints += 300; //with no barrier
-
+        if(humanPoints == 1) humanPoints += 10; //with no barrier
+        if(aiPoints == 1) aiPoints += 10; //with no barrier
+        if(humanPoints == 2&& aiPoints == 0) humanPoints += 500; //with no barrier
+        if(aiPoints == 2 && humanPoints == 0) aiPoints += 500; //with no barrier
         return aiPoints - humanPoints;
     }
 
