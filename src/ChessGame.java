@@ -1,5 +1,5 @@
 package src;
-import java.util.ArrayList;
+import java.beans.beancontext.BeanContext;
 import java.util.List;
 import java.util.Scanner;
 
@@ -8,9 +8,9 @@ public class ChessGame {
     private int n;
     private int m;
 
-    private boolean playerTurn;
+    private boolean IsFirst;
 
-    public ChessGame(int n, int m, boolean playerTurn) {
+    public ChessGame(int n, int m, boolean IsFirst) {
         this.n = n;
         this.m = m;
         this.board = new char[n][n];
@@ -19,7 +19,7 @@ public class ChessGame {
                 board[i][j] = ' '; // Initialize the board with empty spaces
             }
         }
-        this.playerTurn = playerTurn;
+        this.IsFirst = IsFirst;
     }
 
     public boolean boardFull() {
@@ -35,46 +35,64 @@ public class ChessGame {
 
 
     public void playGame() {
-        Scanner scanner = new Scanner(System.in);
+        //Scanner scanner = new Scanner(System.in);
         System.out.println("type the input path");
-        String inputPath = scanner.next();
+        //String inputPath = scanner.next();
+        String inputPath = "F:\\Desktop\\input";
         System.out.println("type the output path");
-        String outputPath = scanner.next();
+        //String outputPath = scanner.next();
+        String outputPath = "F:\\Desktop\\output";
         ChessSteam chessSteam = new ChessSteam();
 
+        //X first,O second
         while (!boardFull() && !checkWin('X') && !checkWin('O')) {
-            if (playerTurn) {
+            // Our Second
+            if (IsFirst) {
+                while (true){
 
-                printBoard();
-                System.out.println("Scan opposite file .......: ");
-                List<Integer> xy = chessSteam.ReadFromInTimer(outputPath).getXY();
-                int row = xy.get(1);
-                int col = xy.get(0);
-                chessSteam.WriteMyMoveToIn(col,row,inputPath);
-                while (!makeMove(row - 1, col - 1, 'X')) { // Player is represented by 'X'
-                    System.out.println("Invalid move, try again.");
-
-                }
-                if (checkWin('X')) {
+                    System.out.println("Scan opposite file from " + inputPath);
+                    List<Integer> xy = chessSteam.ReadTimer(inputPath).getXY();
+                    int row = xy.get(1);
+                    int col = xy.get(0);
+                    if (!makeMove(row - 1, col - 1, 'X')) { // Player is represented by 'X'
+                        System.out.println("Invalid move, try again.");
+                        return;
+                    }
+                    int[] move = findBestMove();
+                    makeMove(move[0],move[1],'O');
+                    System.out.println("Computer moved to " + (move[1]+1) + " " + (move[0]+1));
                     printBoard();
-                    System.out.println("Player X wins!");
-                    break;
+                    chessSteam.WriteMyMove(move[1]+1,move[0]+1,outputPath);
+                    if (checkWin('O')) {
+                        printBoard();
+                        System.out.println("Our wins!");
+                        break;
+                    }
                 }
             } else {
-                System.out.println("Computer is making a move...");
-                int[] move = findBestMove();
-                makeMove(move[0], move[1], 'O'); // Computer is represented by 'O'
-                chessSteam.WriteMyMoveToIn(move[1], move[0], outputPath);
-                chessSteam.ReadFromInTimer(inputPath);
-                System.out.println("Computer moved to " + (move[1] + 1) + " " + (move[0] + 1));
-                if (checkWin('O')) {
+                // Our First
+                while(true){
+                    System.out.println("Our Computer is making a move...");
+                    int[] move = findBestMove();
+                    makeMove(move[0], move[1], 'X');
+                    System.out.println("Computer moved to " + (move[1]+1) + " " + (move[0]+1));
                     printBoard();
-                    System.out.println("Computer wins!");
-                    break;
+                    chessSteam.WriteMyMove(move[1]+1, move[0]+1, inputPath);
+                    List<Integer> xy = chessSteam.ReadTimer(outputPath).getXY();
+                    int row = xy.get(1);
+                    int col = xy.get(0);
+                    if (!makeMove(row - 1, col - 1, 'O')) {
+                        System.out.println("Invalid move, try again.");
+                        return;
+                    }
+                    if (checkWin('X')) {
+                        printBoard();
+                        System.out.println("Our wins!");
+                        break;
+                    }
                 }
-            }
 
-            playerTurn = !playerTurn; // Switch the turn
+            }
         }
 
         if (boardFull() && !checkWin('X') && !checkWin('O')) {
@@ -338,7 +356,7 @@ public class ChessGame {
         int n = scanner.nextInt();
         System.out.println("Enter the number of pieces connected to win: ");
         int m = scanner.nextInt();
-        System.out.println("Who moves first? 1 for player, 2 for computer: ");
+        System.out.println("Who moves first? 1 Our Second, 2 Our First");
         int firstMove = scanner.nextInt();
         //checkSign(firstMove);
         ChessGame game = new ChessGame(n, m, firstMove == 1);

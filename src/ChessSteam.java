@@ -11,7 +11,6 @@ import java.util.List;
  * @Description:
  */
 public class ChessSteam {
-// true first , false second
     static class Axis {
         private int x = -1;
         private int y = -1;
@@ -50,13 +49,7 @@ public class ChessSteam {
         }
     }
 
-
-
-    // full path, FirstRound
-
-
-    Axis TempInAxis;
-
+    Axis TempInAxis = Axis.build(-1,-1);
 
     public Axis ReadFromInput(String FolderPath) {
         File folder = null;
@@ -66,13 +59,13 @@ public class ChessSteam {
 
         if (!folder.exists() && !folder.isDirectory()) {
             System.out.println("The folder does not exist, please create a folder");
-            return Axis.build(-1, -1);// The folder does not exist
+            return null;
         }
         File[] files = folder.listFiles();// Obtain all files
         int FileCount = files.length;
         if (FileCount != 1) {
-            System.out.println("Please check if the folder is only in one file");
-            return Axis.build(-1, -1);// In has 2 files, which may not have been deleted by the other party
+            System.out.println("Please check only one file in folder "+ FolderPath);
+            return null;
         }
 
         TempInAxis = Axis.build(Integer.parseInt(files[0].getName().substring(0, 2)), Integer.parseInt(files[0].getName().substring(2, 4)));
@@ -83,22 +76,24 @@ public class ChessSteam {
         return TempInAxis;
     }
 
-    public Axis ReadFromInTimer(String FolderPath) {
+    public Axis ReadTimer(String FolderPath) {
 
-        ReadFromInput(FolderPath);
+        TempInAxis = Axis.build(-1,-1);
 
         while (TempInAxis.getX() == -1 || TempInAxis.getY() == -1) {
+
             System.out.println("Waiting for opposite's reply");
             try {
                 Thread.sleep(5000);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
+            ReadFromInput(FolderPath);
         }
         return TempInAxis;
     }
 
-    public Boolean WriteMyMoveToIn(int a, int b, String FolderPath) {
+    public Boolean WriteMyMove(int a, int b, String FolderPath) {
         if (a == 0 || b == 0) return false;
         String A = "";
         String B = "";
