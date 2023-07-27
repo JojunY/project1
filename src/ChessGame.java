@@ -1,14 +1,19 @@
 package src;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Random;
-import java.util.Scanner;
+import java.util.*;
 
 public class ChessGame {
     private static final int MAX_DEPTH = 100000;
     private char[][] board;
     private int n;
     private int m;
+
+    private int[][] positionalScores = {
+            {1, 2, 3, 2, 1},
+            {2, 3, 4, 3, 2},
+            {3, 4, 5, 4, 3},
+            {2, 3, 4, 3, 2},
+            {1, 2, 3, 2, 1}
+    };
 
     private boolean isFirst;
     ChessSteam chessSteam = new ChessSteam();
@@ -68,7 +73,6 @@ public class ChessGame {
         String inputPath = chessSteam.GetPath(); // Renamed from GetPath to getPath
         System.out.println("type the output path");
         String outputPath = chessSteam.GetPath(); // Renamed from GetPath to getPath
-        System.out.println("order is " + order);
         if(order == 1){
             firstPlay(inputPath, outputPath);
         }
@@ -102,6 +106,7 @@ public class ChessGame {
                         validMove = true;
                     } else {
                         System.out.println("Invalid move, try again.");
+                        secondPlay(inputPath,outputPath);
                     }
                 }
 
@@ -134,7 +139,7 @@ public class ChessGame {
                 if (boardFull()) {
                     System.out.println("The game is a draw.");
                     chessSteam.WriteMyMove(move[1]+1, move[0]+1, inputPath);
-                    break;
+                    System.exit(0);
                 }
                 printBoard();
                 chessSteam.WriteMyMove(move[1]+1, move[0]+1, inputPath);
@@ -153,6 +158,7 @@ public class ChessGame {
                         validMove = true;
                     } else {
                         System.out.println("Invalid move, try again.");
+                        firstPlay(inputPath,outputPath);
                     }
                 }
 
@@ -236,9 +242,6 @@ public class ChessGame {
 
 
     int[] findBestMove() {
-        if (boardFull()) {
-            throw new IllegalStateException("The board is full. No valid moves are available.");
-        }
 
         int depth = 1; // Start with a depth of 1
         int[] bestMove = new int[2];
@@ -250,18 +253,55 @@ public class ChessGame {
             int currentBestScore = Integer.MIN_VALUE;
             int[] currentBestMove = new int[2];
 
+            // Create a list of all possible moves
+            List<int[]> moves = new ArrayList<>();
             for (int i = 0; i < n; i++) {
                 for (int j = 0; j < n; j++) {
                     if (board[i][j] == ' ') {
-                        board[i][j] = 'O';
-                        int score = minimax(depth, 'X', Integer.MIN_VALUE, Integer.MAX_VALUE);
-                        board[i][j] = ' ';
-                        if (score > currentBestScore) {
-                            currentBestScore = score;
-                            currentBestMove[0] = i;
-                            currentBestMove[1] = j;
-                        }
+                        moves.add(new int[] {i, j});
                     }
+                }
+            }
+
+            // Order the moves using some heuristic
+            Collections.sort(moves, new Comparator<int[]>() {
+                @Override
+                public int compare(int[] move1, int[] move2) {
+                    // Check if the positions resulting from move1 and move2 are in the transposition table
+                    board[move1[0]][move1[1]] = 'O';
+                    long hash1 = generateBoardHash();
+                    board[move1[0]][move1[1]] = ' ';
+
+                    board[move2[0]][move2[1]] = 'O';
+                    long hash2 = generateBoardHash();
+                    board[move2[0]][move2[1]] = ' ';
+
+                    boolean inTable1 = transpositionTable.containsKey(hash1);
+                    boolean inTable2 = transpositionTable.containsKey(hash2);
+
+                    // Prioritize moves that are in the transposition table
+                    if (inTable1 && !inTable2) {
+                        return -1;
+                    } else if (!inTable1 && inTable2) {
+                        return 1;
+                    }
+
+                    // If both or neither are in the transposition table, use another criterion
+                    // For example, distance to the center
+                    int dist1 = Math.abs(n/2 - move1[0]) + Math.abs(n/2 - move1[1]);
+                    int dist2 = Math.abs(n/2 - move2[0]) + Math.abs(n/2 - move2[1]);
+                    return dist1 - dist2;
+                }
+            });
+
+            // Iterate over the ordered moves
+            for (int[] move : moves) {
+                board[move[0]][move[1]] = 'O';
+                int score = minimax(depth, 'X', Integer.MIN_VALUE, Integer.MAX_VALUE);
+                board[move[0]][move[1]] = ' ';
+                if (score > currentBestScore) {
+                    currentBestScore = score;
+                    currentBestMove = move;
                 }
             }
 
@@ -282,6 +322,7 @@ public class ChessGame {
             depth++;
         }
     }
+
 
 
 
@@ -309,55 +350,84 @@ public class ChessGame {
 
     private int evaluateLine(int x, int y, int dx, int dy) {
         int humanPoints = 0, aiPoints = 0;
-        int humanPieces = 0, aiPieces = 0;
+        int gapCount = 0;
+        boolean inSequence = false;
+
         for (int i = 0; i < m; i++) {
             if (isInsideBoard(x + dx * i, y + dy * i)) {
+                if (board[x + dx * i][y + dy * i] == 'O') {
+                    if (inSequence) {
+                        // If we're in the middle of a sequence and we encounter another 'O', reset the gap count
+                        gapCount = 0;
+                    } else {
+                        // If we're not in a sequence and we encounter an 'O', start a new sequence
+                        inSequence = true;
+                    }
+
+
+                    aiPoints++;
+                } else if (inSequence && board[x + dx * i][y + dy * i] == ' ') {
+                    // If we're in a sequence and we encounter an empty space, increment the gap count
+                    gapCount++;
+                } else if (board[x + dx * i][y + dy * i] == 'X') {
+                    // If we encounter an 'X', end the current sequence
+                    inSequence = false;
+                }
+
                 if (board[x + dx * i][y + dy * i] == 'X') humanPoints++;
-                if (board[x + dx * i][y + dy * i] == 'O') aiPoints++;
             }
-
-            if ((x + dx) >= 0 && (x + dx) < n && (y + dy) >= 0 && (y + dy) < n && board[x + dx][y + dy] == ' ') {
-                humanPieces += 50;
-            }
-
-            if ((x - dx) >= 0 && (x - dx) < n && (y - dy) >= 0 && (y - dy) < n && board[x - dx][y - dy] == ' ') {
-                humanPieces += 50;
-            }
-
-            if ((x + m*dx) >= 0 && (x + m*dx) < n && (y + m*dy) >= 0 && (y + m*dy) < n && board[x + m*dx][y + m*dy] == ' ') {
-                aiPieces += 100;
-            }
-
-            if ((x - m*dx) >= 0 && (x - m*dx) < n && (y - m*dy) >= 0 && (y - m*dy) < n && board[x - m*dx][y - m*dy] == ' ') {
-                aiPieces += 100;
-            }
-
         }
 
-        if (aiPoints == m) return Integer.MIN_VALUE; // AI has five in a row
-        if (humanPoints == m) return Integer.MAX_VALUE; // Human has five in a row
-        if (humanPoints == m-1 && aiPoints == 0) return -20000; // Human has a live four
-        if (aiPoints == m-1 && humanPoints == 0) return 20000; //
-        if (aiPoints == m-1 && humanPoints == 1) return 10000; //
-        if (humanPoints == m-1 && aiPoints == 1) return -8000;
-        if (aiPoints == m-2 && humanPoints == 1) return 7000; //
-        if (humanPoints == m-2 && aiPoints == 1) return -5000;
-        if (aiPoints == m-2 && humanPoints == 0) return 4500; //
-        if (humanPoints == m-2 && aiPoints == 0) return -3000;
-        if (aiPoints == m-3 && humanPoints == 0) return 2500; //
-        if (humanPoints == m-3 && aiPoints == 0) return -2000;
+        // Evaluations for 5 in a row
+        if (aiPoints == m) return Integer.MAX_VALUE; // AI has five in a row
+        if (humanPoints == m) return Integer.MIN_VALUE; // Human has five in a row
 
-        // AI has a live four
-        if(humanPoints == 1) return -100; //with no barrier
-        if(aiPoints == 1) return 100; //with no barrier
-        if(humanPoints == 2&& aiPoints == 0) return -1000; //with no barrier
-        if(aiPoints == 2 && humanPoints == 0) return 2000; //with no barrier
-        if(m>5){
-            if(humanPoints == 3&& aiPoints == 0) return -3000; //with no barrier
-            if(aiPoints == 3 && humanPoints == 0) return 4000; //with no barrier
+        // Evaluations for 4 in a row
+        if (aiPoints == m-1 && humanPoints == 0) return 15000; // AI has a live four or dead four
+        if (humanPoints == m-1 && aiPoints == 0) return 15000; // Human has a live four or dead four
+
+        // Evaluations for 3 in a row
+        if (aiPoints == m-2 && humanPoints == 0) return 10000 ; // AI has a potential trap
+        if (humanPoints == m-2 && aiPoints == 0) return -8000; // Human has a potential trap
+
+        // Evaluations for disrupted lines
+        if (aiPoints == m-1 && humanPoints == 1) return 7000; // AI has four in a row but disrupted by human
+        if (humanPoints == m-1 && aiPoints == 1) return -5000; // Human has four in a row but disrupted by AI
+        if (aiPoints == m-2 && humanPoints == 1) return 4000; // AI has three in a row but disrupted by human
+        if (humanPoints == m-2 && aiPoints == 1) return -2000; // Human has three in a row but disrupted by AI
+
+        // Scenarios with only one type of pieces
+        if (aiPoints == 1 && humanPoints == 0) return 100;
+        if (humanPoints == 1 && aiPoints == 0) return -200;
+        if (aiPoints == 2 && humanPoints == 0) return 600;
+        if (humanPoints == 2 && aiPoints == 0) return -400;
+
+        if(m>8) {
+            if (aiPoints == 4 && humanPoints == 0) return 2000;
+            if (humanPoints == 4 && aiPoints == 0) return -1600;
+            if (aiPoints == 5 && humanPoints == 0) return 4000;
+            if (humanPoints == 5 && aiPoints == 0) return -3200;
+            if (aiPoints == 6 && humanPoints == 0) return 8000;
+            if (humanPoints == 6 && aiPoints == 0) return -6400;
         }
-        return aiPieces - humanPieces;
+        if(m<=6) {
+            // "Jumped" threes for the AI
+            if (aiPoints == 3 && gapCount == 1) return 2000;
+            if (humanPoints == 3 && gapCount == 1) return -1600;
+            if (aiPoints == 4 && gapCount == 1) return 4000;
+            if (humanPoints == 4 && gapCount == 1) return -3200;
+        }
+
+        // Default case: evaluate based on difference of AI and human points, considering if line is open
+        int aiDefault =aiPoints * 10 ;
+        int humanDefault = humanPoints -10 ;
+
+        return aiDefault + humanDefault;
     }
+
+
+
+
 
 
 
