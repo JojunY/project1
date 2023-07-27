@@ -12,6 +12,12 @@ import java.util.List;
  * @create: 2023-07-25 19:56
  * @Description:
  */
+
+/**
+ * @author:Aurora
+ * @create: 2023-07-25 19:56
+ * @Description:
+ */
 public class ChessSteam {
     static class Axis {
         private int x = -1;
@@ -51,7 +57,7 @@ public class ChessSteam {
         }
     }
 
-    Axis TempInAxis = Axis.build(-1,-1);
+    Axis TempInAxis = Axis.build(-1, -1);
 
     public Axis ReadFromInput(String FolderPath) {
         File folder = null;
@@ -66,7 +72,7 @@ public class ChessSteam {
         File[] files = folder.listFiles();// Obtain all files
         int FileCount = files.length;
         if (FileCount != 1) {
-            System.out.println("Please check only one file in folder "+ FolderPath);
+            System.out.println("Please check only one file in folder " + FolderPath);
             return null;
         }
 
@@ -80,13 +86,13 @@ public class ChessSteam {
 
     public Axis ReadTimer(String FolderPath) {
 
-        TempInAxis = Axis.build(-1,-1);
+        TempInAxis = Axis.build(-1, -1);
 
         while (TempInAxis.getX() == -1 || TempInAxis.getY() == -1) {
 
             System.out.println("Waiting for opposite's reply");
             try {
-                Thread.sleep(5000);
+                Thread.sleep(3000);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
@@ -100,8 +106,13 @@ public class ChessSteam {
         String A = "";
         String B = "";
         if (a < 10 && a > 0) A = "0" + a;
+        else {
+            A = "" + a;
+        }
         if (b < 10 && b > 0) B = "0" + b;
-
+        else {
+            B = "" + b;
+        }
         String MoveInPath = FolderPath + "\\" + A + B;
         File MyMove = new File(MoveInPath);
 
