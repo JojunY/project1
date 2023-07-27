@@ -87,6 +87,10 @@ public class ChessGame {
                 makeMove(move[0],move[1],'O');
                 System.out.println("Computer moved to " + (move[1]+1) + " " + (move[0]+1));
                 printBoard();
+                if (boardFull()){
+                    System.out.println("The game is a draw.");
+                    break;
+                }
                 chessSteam.WriteMyMove(move[1]+1,move[0]+1,outputPath);
                 if (checkWin('O')) {
                     printBoard();
