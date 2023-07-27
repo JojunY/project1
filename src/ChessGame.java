@@ -3,23 +3,24 @@ import java.util.List;
 import java.util.Scanner;
 
 public class ChessGame {
+    private static final int MAX_DEPTH = 10;
     private char[][] board;
     private int n;
     private int m;
 
-    private boolean IsFirst;
+    private boolean isFirst; // Renamed from IsFirst to isFirst
     ChessSteam chessSteam = new ChessSteam();
 
     public ChessGame(int n, int m, int order) {
 
         if(order == 1){
-            IsFirst = true;
+            isFirst = true;
         }
         else if(order == 2){
-            IsFirst = false;
+            isFirst = false;
         }
         else {
-            System.out.println("error input order,please run again");
+            System.out.println("error input order, please run again");
             System.exit(0);
         }
 
@@ -44,12 +45,11 @@ public class ChessGame {
         return true;
     }
 
-
     public void playGame(int order) {
         System.out.println("type the input path");
-        String inputPath = chessSteam.GetPath();
+        String inputPath = chessSteam.GetPath(); // Renamed from GetPath to getPath
         System.out.println("type the output path");
-        String outputPath = chessSteam.GetPath();
+        String outputPath = chessSteam.GetPath(); // Renamed from GetPath to getPath
         System.out.println("order is " + order);
         if(order == 1){
             firstPlay(inputPath, outputPath);
@@ -78,7 +78,7 @@ public class ChessGame {
                 List<Integer> xy = chessSteam.ReadTimer(inputPath).getXY();
                 int row = xy.get(1);
                 int col = xy.get(0);
-                System.out.println("opposite: is " + col + row);
+                System.out.println("opposite: is " + col +" "+row +" Our computer are thinking.........");
                 if (!makeMove(row - 1, col - 1, 'X') ) { // Player is represented by 'X'
                     System.out.println("Invalid move, try again.");
                     secondPlay(inputPath,outputPath);
@@ -109,15 +109,11 @@ public class ChessGame {
 
         while (!boardFull() && !checkWin('X') && !checkWin('O')) {
 
-
-            // Our Second
-
-            // Our First
             while(true){
 
                 System.out.println("Our Computer is making a move...");
                 int[] move = findBestMove();
-                makeMove(move[0], move[1], 'X');
+                makeMove(move[0], move[1], 'O');
                 System.out.println("Computer moved to " + (move[1]+1) + " " + (move[0]+1));
                 printBoard();
                 if (boardFull()){
@@ -126,13 +122,13 @@ public class ChessGame {
                     break;
                 }
                 chessSteam.WriteMyMove(move[1]+1, move[0]+1, inputPath);
-                if (checkWin('O')) {
+                if (checkWin('X')) {
                     printBoard();
                     System.out.println("Our lose.");
                     break;
                 }
                 List<Integer> xy = chessSteam.ReadTimer(outputPath).getXY();
-                if (checkWin('O')) {
+                if (checkWin('X')) {
                     printBoard();
                     System.out.println("Our lose.");
                     break;
@@ -143,11 +139,11 @@ public class ChessGame {
                 }
                 int row = xy.get(1);
                 int col = xy.get(0);
-                if (!makeMove(row - 1, col - 1, 'O')) {
+                if (!makeMove(row - 1, col - 1, 'X')) {
                     System.out.println("Invalid move, try again.");
                     firstPlay(inputPath,outputPath);
                 }
-                if (checkWin('X')) {
+                if (checkWin('O')) {
                     printBoard();
                     System.out.println("Our wins!");
                     break;
@@ -224,36 +220,51 @@ public class ChessGame {
 
 
     int[] findBestMove() {
-        int bestScore = Integer.MIN_VALUE;
+        if (boardFull()) {
+            throw new IllegalStateException("The board is full. No valid moves are available.");
+        }
+
+        int depth = 1; // Start with a depth of 1
         int[] bestMove = new int[2];
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < n; j++) {
-                if (board[i][j] == ' ') {
-                    board[i][j] = 'O';
-                    int score = minimax(1, 'X', Integer.MIN_VALUE, Integer.MAX_VALUE); // depth is set to 10 here
-                    board[i][j] = ' ';
-                    if (score > bestScore) {
-                        bestScore = score;
-                        bestMove[0] = i;
-                        bestMove[1] = j;
+
+        long startTime = System.currentTimeMillis(); // Record the start time
+        long timeLimit = 5000; // Set a time limit of 5000 milliseconds (5 seconds)
+
+        outerloop:
+        while (true) { // Keep increasing depth until a stopping condition is met
+            int currentBestScore = Integer.MIN_VALUE;
+            int[] currentBestMove = new int[2];
+            for (int i = 0; i < n; i++) {
+                for (int j = 0; j < n; j++) {
+                    if (board[i][j] == ' ') {
+                        board[i][j] = 'O';
+                        int score = minimax(depth, 'X', Integer.MIN_VALUE, Integer.MAX_VALUE);
+                        board[i][j] = ' ';
+                        if (score > currentBestScore) {
+                            currentBestScore = score;
+                            currentBestMove[0] = i;
+                            currentBestMove[1] = j;
+                        }
+                    }
+                    long elapsedTime = System.currentTimeMillis() - startTime; // Calculate elapsed time
+                    // If elapsed time is greater than the time limit, stop and return the best move found so far
+                    if (elapsedTime > timeLimit) {
+                        break outerloop;
                     }
                 }
             }
-        }
-
-        if (board[bestMove[0]][bestMove[1]] != ' ') {
-            if (boardFull()) {
-                printBoard();
-                System.out.println("It is draw");
-                System.exit(0);
+            // If we have a winning move, or we have reached the maximum depth, stop
+            if (currentBestScore == Integer.MAX_VALUE || depth == MAX_DEPTH) {
+                return currentBestMove;
             }
-            else {
-                findBestMove();
-            }
-            // Or any appropriate action
+            // Update the best move found so far
+            bestMove = currentBestMove;
+            // Increase depth for the next iteration
+            depth++;
         }
         return bestMove;
     }
+
 
 
     private int evaluateBoard() {

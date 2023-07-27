@@ -86,7 +86,7 @@ public class ChessSteam {
 
             System.out.println("Waiting for opposite's reply");
             try {
-                Thread.sleep(3000);
+                Thread.sleep(1000);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
