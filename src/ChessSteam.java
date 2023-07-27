@@ -86,7 +86,7 @@ public class ChessSteam {
 
             System.out.println("Waiting for opposite's reply");
             try {
-                Thread.sleep(5000);
+                Thread.sleep(3000);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
@@ -100,8 +100,9 @@ public class ChessSteam {
         String A = "";
         String B = "";
         if (a < 10 && a > 0) A = "0" + a;
+        else {A = ""+ a;}
         if (b < 10 && b > 0) B = "0" + b;
-
+        else {B = ""+ b;}
         String MoveInPath = FolderPath + "\\" + A + B;
         File MyMove = new File(MoveInPath);
 
