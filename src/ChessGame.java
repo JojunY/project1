@@ -1,34 +1,53 @@
 package src;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Random;
 import java.util.Scanner;
 
 public class ChessGame {
+    private static final int MAX_DEPTH = 100000;
     private char[][] board;
     private int n;
     private int m;
 
-    private boolean IsFirst;
+    private boolean isFirst;
     ChessSteam chessSteam = new ChessSteam();
 
+    HashMap<Long, Integer> transpositionTable = new HashMap<Long, Integer>();
+    // 3D array for storing Zobrist numbers
+    private long[][][] zobristTable;
+
     public ChessGame(int n, int m, int order) {
-
-        if(order == 1){
-            IsFirst = true;
-        }
-        else if(order == 2){
-            IsFirst = false;
-        }
-        else {
-            System.out.println("error input order,please run again");
-            System.exit(0);
-        }
-
         this.n = n;
         this.m = m;
         this.board = new char[n][n];
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
                 board[i][j] = ' '; // Initialize the board with empty spaces
+            }
+        }
+        initializeZobristTable();
+        if (order == 1) {
+            isFirst = true;
+        } else if (order == 2) {
+            isFirst = false;
+        } else {
+            System.out.println("Error input order, please run again.");
+            System.exit(0);
+        }
+
+        // Initialize Zobrist table
+
+    }
+
+    private void initializeZobristTable() {
+        zobristTable = new long[n][n][3]; // n x n x 3 for 'X', 'O', and ' '
+        Random rand = new Random();
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                for (int k = 0; k < 3; k++) {
+                    zobristTable[i][j][k] = rand.nextLong();
+                }
             }
         }
     }
@@ -44,12 +63,11 @@ public class ChessGame {
         return true;
     }
 
-
     public void playGame(int order) {
         System.out.println("type the input path");
-        String inputPath = chessSteam.GetPath();
+        String inputPath = chessSteam.GetPath(); // Renamed from GetPath to getPath
         System.out.println("type the output path");
-        String outputPath = chessSteam.GetPath();
+        String outputPath = chessSteam.GetPath(); // Renamed from GetPath to getPath
         System.out.println("order is " + order);
         if(order == 1){
             firstPlay(inputPath, outputPath);
@@ -60,7 +78,6 @@ public class ChessGame {
     }
 
     private void secondPlay(String inputPath, String outputPath) {
-
         while (!boardFull() && !checkWin('X') && !checkWin('O')) {
             // Our Second
             while (true){
@@ -75,15 +92,19 @@ public class ChessGame {
                 }
                 System.out.println("Scan opposite file from " + inputPath);
 
-                List<Integer> xy = chessSteam.ReadTimer(inputPath).getXY();
-                int row = xy.get(1);
-                int col = xy.get(0);
-                System.out.println("opposite: is " + col +" "+row +"Our computer are thinking.....");
-                printBoard();
-                if (!makeMove(row - 1, col - 1, 'X') ) { // Player is represented by 'X'
-                    System.out.println("Invalid move, try again.");
-                    secondPlay(inputPath,outputPath);
+                boolean validMove = false;
+                while (!validMove) {
+                    List<Integer> xy = chessSteam.ReadTimer(inputPath).getXY();
+                    int row = xy.get(1);
+                    int col = xy.get(0);
+                    System.out.println("opposite: is " + col +" "+row +" Our computer are thinking.........");
+                    if (makeMove(row - 1, col - 1, 'X')) {
+                        validMove = true;
+                    } else {
+                        System.out.println("Invalid move, try again.");
+                    }
                 }
+
                 int[] move = findBestMove();
                 makeMove(move[0],move[1],'O');
                 System.out.println("Computer moved to " + (move[1]+1) + " " + (move[0]+1));
@@ -99,37 +120,43 @@ public class ChessGame {
                     break;
                 }
             }
-
-
-
-
         }
     }
 
+
     private void firstPlay(String inputPath, String outputPath) {
-
         while (!boardFull() && !checkWin('X') && !checkWin('O')) {
-
-            while(true){
-
+            while (true) {
                 System.out.println("Our Computer is making a move...");
                 int[] move = findBestMove();
-                makeMove(move[0], move[1], 'X');
+                makeMove(move[0], move[1], 'O');
                 System.out.println("Computer moved to " + (move[1]+1) + " " + (move[0]+1));
-                printBoard();
-                if (boardFull()){
+                if (boardFull()) {
                     System.out.println("The game is a draw.");
                     chessSteam.WriteMyMove(move[1]+1, move[0]+1, inputPath);
                     break;
                 }
+                printBoard();
                 chessSteam.WriteMyMove(move[1]+1, move[0]+1, inputPath);
                 if (checkWin('O')) {
                     printBoard();
-                    System.out.println("Our lose.");
+                    System.out.println("Our wins!");
                     break;
                 }
-                List<Integer> xy = chessSteam.ReadTimer(outputPath).getXY();
-                if (checkWin('O')) {
+
+                boolean validMove = false;
+                while (!validMove) {
+                    List<Integer> xy = chessSteam.ReadTimer(outputPath).getXY();
+                    int row = xy.get(1);
+                    int col = xy.get(0);
+                    if (makeMove(row - 1, col - 1, 'X')) {
+                        validMove = true;
+                    } else {
+                        System.out.println("Invalid move, try again.");
+                    }
+                }
+
+                if (checkWin('X')) {
                     printBoard();
                     System.out.println("Our lose.");
                     break;
@@ -138,22 +165,10 @@ public class ChessGame {
                     System.out.println("The game is a draw.");
                     break;
                 }
-                int row = xy.get(1);
-                int col = xy.get(0);
-                if (!makeMove(row - 1, col - 1, 'O')) {
-                    System.out.println("Invalid move, try again.");
-                    firstPlay(inputPath,outputPath);
-                }
-                if (checkWin('X')) {
-                    printBoard();
-                    System.out.println("Our wins!");
-                    break;
-                }
             }
-
         }
-
     }
+
 
 
     private void printBoard() {
@@ -221,36 +236,56 @@ public class ChessGame {
 
 
     int[] findBestMove() {
-        int bestScore = Integer.MIN_VALUE;
+        if (boardFull()) {
+            throw new IllegalStateException("The board is full. No valid moves are available.");
+        }
+
+        int depth = 1; // Start with a depth of 1
         int[] bestMove = new int[2];
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < n; j++) {
-                if (board[i][j] == ' ') {
-                    board[i][j] = 'O';
-                    int score = minimax(1, 'X', Integer.MIN_VALUE, Integer.MAX_VALUE); // depth is set to 10 here
-                    board[i][j] = ' ';
-                    if (score > bestScore) {
-                        bestScore = score;
-                        bestMove[0] = i;
-                        bestMove[1] = j;
+
+        long timeLimit = 8000; // Set a time limit of 8 seconds
+        long startTime = System.currentTimeMillis(); // Record the start time
+
+        while (true) {
+            int currentBestScore = Integer.MIN_VALUE;
+            int[] currentBestMove = new int[2];
+
+            for (int i = 0; i < n; i++) {
+                for (int j = 0; j < n; j++) {
+                    if (board[i][j] == ' ') {
+                        board[i][j] = 'O';
+                        int score = minimax(depth, 'X', Integer.MIN_VALUE, Integer.MAX_VALUE);
+                        board[i][j] = ' ';
+                        if (score > currentBestScore) {
+                            currentBestScore = score;
+                            currentBestMove[0] = i;
+                            currentBestMove[1] = j;
+                        }
                     }
                 }
             }
-        }
 
-        if (board[bestMove[0]][bestMove[1]] != ' ') {
-            if (boardFull()) {
-                printBoard();
-                System.out.println("It is draw");
-                System.exit(0);
+            // Check if the time limit has been exceeded after evaluating all moves
+            long elapsedTime = System.currentTimeMillis() - startTime;
+            if (elapsedTime > timeLimit) {
+                return bestMove;
             }
-            else {
-                findBestMove();
+
+            // If we have a winning move, or we have reached the maximum depth, stop
+            if (currentBestScore == Integer.MAX_VALUE || depth == MAX_DEPTH) {
+                return currentBestMove;
             }
-            // Or any appropriate action
+
+            // Update the best move found so far
+            bestMove = currentBestMove;
+            // Increase depth for the next iteration
+            depth++;
         }
-        return bestMove;
     }
+
+
+
+
 
 
     private int evaluateBoard() {
@@ -333,52 +368,80 @@ public class ChessGame {
 
 
     private int minimax(int depth, char player, int alpha, int beta) {
-        // Base case - check if win or loss or draw, then return score
-        if (checkWin('O')) { return Integer.MAX_VALUE; }
-        else if (checkWin('X')) { return Integer.MIN_VALUE; }
-        else if (boardFull() || depth == 0) { return evaluateBoard(); } // depth == 0 is the base case to stop recursion
+        long boardHash = generateBoardHash();
+        if (transpositionTable.containsKey(boardHash)) {
+            return transpositionTable.get(boardHash);
+        }
+
+        if (checkWin('O')) {
+            transpositionTable.put(boardHash, Integer.MAX_VALUE);
+            return Integer.MAX_VALUE;
+        } else if (checkWin('X')) {
+            transpositionTable.put(boardHash, Integer.MIN_VALUE);
+            return Integer.MIN_VALUE;
+        } else if (boardFull() || depth == 0) {
+            int score = evaluateBoard();
+            transpositionTable.put(boardHash, score);
+            return score;
+        }
+
         if (player == 'O') {
             int maxEval = Integer.MIN_VALUE;
-            // loop through all possible moves
             for (int i = 0; i < n; i++) {
                 for (int j = 0; j < n; j++) {
-                    // Check if spot is empty
                     if (board[i][j] == ' ') {
-                        // Make move
                         board[i][j] = player;
-                        int eval = minimax(depth-1, 'X', alpha, beta); // depth is decreased by 1 here
-                        // Undo move
+                        int eval = minimax(depth-1, 'X', alpha, beta);
                         board[i][j] = ' ';
                         maxEval = Math.max(maxEval, eval);
                         alpha = Math.max(alpha, eval);
-                        if (beta <= alpha)
+                        if (beta <= alpha) {
                             break;
+                        }
                     }
                 }
             }
+            transpositionTable.put(boardHash, maxEval);
             return maxEval;
-        } else { // If player is X
+        } else {
             int minEval = Integer.MAX_VALUE;
-            // loop through all possible moves
             for (int i = 0; i < n; i++) {
                 for (int j = 0; j < n; j++) {
-                    // Check if spot is empty
                     if (board[i][j] == ' ') {
-                        // Make move
                         board[i][j] = player;
-                        int eval = minimax(depth-1, 'O', alpha, beta); // depth is decreased by 1 here
-                        // Undo move
+                        int eval = minimax(depth-1, 'O', alpha, beta);
                         board[i][j] = ' ';
                         minEval = Math.min(minEval, eval);
                         beta = Math.min(beta, eval);
-                        if (beta <= alpha)
+                        if (beta <= alpha) {
                             break;
+                        }
                     }
                 }
             }
+            transpositionTable.put(boardHash, minEval);
             return minEval;
         }
     }
+
+
+
+    private long generateBoardHash() {
+        long hash = 0L;
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                if (board[i][j] == 'X') {
+                    hash ^= zobristTable[i][j][0];
+                } else if (board[i][j] == 'O') {
+                    hash ^= zobristTable[i][j][1];
+                } else { // ' '
+                    hash ^= zobristTable[i][j][2];
+                }
+            }
+        }
+        return hash;
+    }
+
 
     private boolean checkWin(char player) {
         // Implement this method to check if the game is won
@@ -446,7 +509,9 @@ public class ChessGame {
         int m = scanner.nextInt();
         System.out.println("Who moves first? 1 Our first, 2 Our second");
         int firstMove = scanner.nextInt();
+
         ChessGame game = new ChessGame(n, m, firstMove);
+        game.initializeZobristTable();
         game.playGame(firstMove);
     }
 }
