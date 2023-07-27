@@ -114,11 +114,18 @@ public class ChessSteam {
         }
     }
 
-    public Boolean GetPath() throws IOException {
+    public String GetPath() {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-        File file = new File(reader.readLine());
+        String s = null;
+        try {
+            s = reader.readLine();
+            System.out.println(s);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        File file = new File(s);
         System.out.println(file.exists());
-        return file.exists();
+        return s;
     }
 
 }

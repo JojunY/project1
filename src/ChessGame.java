@@ -35,14 +35,19 @@ public class ChessGame {
 
 
     public void playGame() {
+
+        ChessSteam chessSteam = new ChessSteam();
+
         //Scanner scanner = new Scanner(System.in);
         System.out.println("type the input path");
-        //String inputPath = scanner.next();
-        String inputPath = "F:\\Desktop\\input";
+        String inputPath = chessSteam.GetPath();
+        //String inputPath = "F:\\Desktop\\input";
+
+
         System.out.println("type the output path");
-        //String outputPath = scanner.next();
-        String outputPath = "F:\\Desktop\\output";
-        ChessSteam chessSteam = new ChessSteam();
+        String outputPath = chessSteam.GetPath();
+        //String outputPath = "F:\\Desktop\\output";
+        chessSteam.GetPath();
 
         //X first,O second
         while (!boardFull() && !checkWin('X') && !checkWin('O')) {
