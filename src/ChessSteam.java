@@ -1,7 +1,9 @@
 package src;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -103,6 +105,7 @@ public class ChessSteam {
         String MoveInPath = FolderPath + "\\" + A + B;
         File MyMove = new File(MoveInPath);
 
+
         try {
             boolean newFileBoolean = MyMove.createNewFile();
             return newFileBoolean;
@@ -110,4 +113,12 @@ public class ChessSteam {
             throw new RuntimeException(e);
         }
     }
+
+    public Boolean GetPath() throws IOException {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+        File file = new File(reader.readLine());
+        System.out.println(file.exists());
+        return file.exists();
+    }
+
 }
