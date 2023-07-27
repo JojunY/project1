@@ -11,7 +11,7 @@ public class ChessGame {
     private int m;
 
     private boolean isFirst;
-    ChessSteam chessSteam = new ChessSteam();
+    ChessStream chessStream = new ChessStream();
 
     HashMap<Long, Integer> transpositionTable = new HashMap<Long, Integer>();
     // 3D array for storing Zobrist numbers
@@ -65,9 +65,9 @@ public class ChessGame {
 
     public void playGame(int order) {
         System.out.println("type the input path");
-        String inputPath = chessSteam.GetPath(); // Renamed from GetPath to getPath
+        String inputPath = chessStream.GetPath(); // Renamed from GetPath to getPath
         System.out.println("type the output path");
-        String outputPath = chessSteam.GetPath(); // Renamed from GetPath to getPath
+        String outputPath = chessStream.GetPath(); // Renamed from GetPath to getPath
         System.out.println("order is " + order);
         if(order == 1){
             firstPlay(inputPath, outputPath);
@@ -94,7 +94,7 @@ public class ChessGame {
 
                 boolean validMove = false;
                 while (!validMove) {
-                    List<Integer> xy = chessSteam.ReadTimer(inputPath).getXY();
+                    List<Integer> xy = chessStream.ReadTimer(inputPath).getXY();
                     int row = xy.get(1);
                     int col = xy.get(0);
                     System.out.println("opposite: is " + col +" "+row +" Our computer are thinking.........");
@@ -113,7 +113,7 @@ public class ChessGame {
                     System.out.println("The game is a draw.");
                     break;
                 }
-                chessSteam.WriteMyMove(move[1]+1,move[0]+1,outputPath);
+                chessStream.WriteMyMove(move[1]+1,move[0]+1,outputPath);
                 if (checkWin('O')) {
                     printBoard();
                     System.out.println("Our wins!");
@@ -133,11 +133,11 @@ public class ChessGame {
                 System.out.println("Computer moved to " + (move[1]+1) + " " + (move[0]+1));
                 if (boardFull()) {
                     System.out.println("The game is a draw.");
-                    chessSteam.WriteMyMove(move[1]+1, move[0]+1, inputPath);
+                    chessStream.WriteMyMove(move[1]+1, move[0]+1, inputPath);
                     break;
                 }
                 printBoard();
-                chessSteam.WriteMyMove(move[1]+1, move[0]+1, inputPath);
+                chessStream.WriteMyMove(move[1]+1, move[0]+1, inputPath);
                 if (checkWin('O')) {
                     printBoard();
                     System.out.println("Our wins!");
@@ -146,7 +146,7 @@ public class ChessGame {
 
                 boolean validMove = false;
                 while (!validMove) {
-                    List<Integer> xy = chessSteam.ReadTimer(outputPath).getXY();
+                    List<Integer> xy = chessStream.ReadTimer(outputPath).getXY();
                     int row = xy.get(1);
                     int col = xy.get(0);
                     if (makeMove(row - 1, col - 1, 'X')) {
