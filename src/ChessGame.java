@@ -134,6 +134,7 @@ public class ChessGame {
                     System.out.println("The game is a draw.");
                     chessStream.WriteMyMove(move[1]+1, move[0]+1, inputPath);
                     System.exit(0);
+
                 }
                 chessStream.WriteMyMove(move[1]+1, move[0]+1, inputPath);
                 if (checkWin('O')) {
