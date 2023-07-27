@@ -78,7 +78,8 @@ public class ChessGame {
                 List<Integer> xy = chessSteam.ReadTimer(inputPath).getXY();
                 int row = xy.get(1);
                 int col = xy.get(0);
-                System.out.println("opposite: is " + col + row);
+                System.out.println("opposite: is " + col +" "+row +"Our computer are thinking.....");
+                printBoard();
                 if (!makeMove(row - 1, col - 1, 'X') ) { // Player is represented by 'X'
                     System.out.println("Invalid move, try again.");
                     secondPlay(inputPath,outputPath);
@@ -109,10 +110,6 @@ public class ChessGame {
 
         while (!boardFull() && !checkWin('X') && !checkWin('O')) {
 
-
-            // Our Second
-
-            // Our First
             while(true){
 
                 System.out.println("Our Computer is making a move...");
