@@ -12,7 +12,7 @@ import java.util.List;
  * @create: 2023-07-25 19:56
  * @Description:
  */
-public class ChessSteam {
+public class ChessStream {
     static class Axis {
         private int x = -1;
         private int y = -1;
@@ -58,20 +58,19 @@ public class ChessSteam {
         if (!FolderPath.equals("")) {
             folder = new File(FolderPath);
         }
-
+        assert folder != null;
         if (!folder.exists() && !folder.isDirectory()) {
             System.out.println("The folder does not exist, please create a folder");
             return null;
         }
         File[] files = folder.listFiles();// Obtain all files
+        assert files != null;
         int FileCount = files.length;
         if (FileCount != 1) {
             System.out.println("Please check only one file in folder "+ FolderPath);
             return null;
         }
-
         TempInAxis = Axis.build(Integer.parseInt(files[0].getName().substring(0, 2)), Integer.parseInt(files[0].getName().substring(2, 4)));
-
         // Del their file
         files[0].delete();
 
@@ -95,21 +94,22 @@ public class ChessSteam {
         return TempInAxis;
     }
 
-    public Boolean WriteMyMove(int a, int b, String FolderPath) {
-        if (a == 0 || b == 0) return false;
+    public void WriteMyMove(int a, int b, String FolderPath) {
+        if (a == 0 || b == 0) return;
         String A = "";
         String B = "";
         if (a < 10 && a > 0) A = "0" + a;
-        else {A = ""+ a;}
+        else {
+            A = ""+ a;
+        }
         if (b < 10 && b > 0) B = "0" + b;
-        else {B = ""+ b;}
+        else {
+            B = ""+ b;
+        }
         String MoveInPath = FolderPath + "\\" + A + B;
         File MyMove = new File(MoveInPath);
-
-
         try {
-            boolean newFileBoolean = MyMove.createNewFile();
-            return newFileBoolean;
+            MyMove.createNewFile();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -117,13 +117,12 @@ public class ChessSteam {
 
     public String GetPath() {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-        String s = null;
+        String s;
         try {
             s = reader.readLine();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        File file = new File(s);
         return s;
     }
 
