@@ -119,12 +119,10 @@ public class ChessSteam {
         String s = null;
         try {
             s = reader.readLine();
-            System.out.println(s);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
         File file = new File(s);
-        System.out.println(file.exists());
         return s;
     }
 
