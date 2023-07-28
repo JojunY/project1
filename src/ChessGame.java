@@ -95,23 +95,28 @@ public class ChessGame {
                     int row = xy.get(1);
                     int col = xy.get(0);
                     System.out.println("opposite: is " + col +" "+row +" Our computer are thinking.........");
+
                     if (makeMove(row - 1, col - 1, 'X')) {
                         validMove = true;
                     } else {
                         System.out.println("Invalid move, try again.");
-                        secondPlay(inputPath,outputPath);
                     }
                 }
 
                 int[] move = findBestMove();
+                while (board[move[0]][move[1]] != ' ') {
+                    // If the best move is invalid, get another best move
+                    move = findBestMove();
+                }
                 makeMove(move[0],move[1],'O');
                 System.out.println("Computer moved to " + (move[1]+1) + " " + (move[0]+1));
+                chessStream.WriteMyMove(move[1]+1,move[0]+1,outputPath);
+
                 printBoard();
                 if (boardFull()){
                     System.out.println("The game is a draw.");
                     break;
                 }
-                chessStream.WriteMyMove(move[1]+1,move[0]+1,outputPath);
                 if (checkWin('O')) {
                     printBoard();
                     System.out.println("Our wins!");
@@ -122,21 +127,24 @@ public class ChessGame {
     }
 
 
+
     private void firstPlay(String inputPath, String outputPath) {
         while (!boardFull() && !checkWin('X') && !checkWin('O')) {
             while (true) {
                 System.out.println("Our Computer is making a move...");
                 int[] move = findBestMove();
+                while (board[move[0]][move[1]] != ' ') {
+                    // If the best move is invalid, get another best move
+                    move = findBestMove();
+                }
                 makeMove(move[0], move[1], 'O');
                 System.out.println("Computer moved to " + (move[1]+1) + " " + (move[0]+1));
+                chessStream.WriteMyMove(move[1]+1, move[0]+1, inputPath);
                 printBoard();
                 if (boardFull()) {
                     System.out.println("The game is a draw.");
-                    chessStream.WriteMyMove(move[1]+1, move[0]+1, inputPath);
-                    System.exit(0);
-
+                    break;
                 }
-                chessStream.WriteMyMove(move[1]+1, move[0]+1, inputPath);
                 if (checkWin('O')) {
                     printBoard();
                     System.out.println("Our wins!");
@@ -148,11 +156,16 @@ public class ChessGame {
                     List<Integer> xy = chessStream.ReadTimer(outputPath).getXY();
                     int row = xy.get(1);
                     int col = xy.get(0);
-                    if (makeMove(row - 1, col - 1, 'X')) {
-                        validMove = true;
+                    System.out.println("opposite: is " + col +" "+row);
+                    if (board[row - 1][col - 1] == ' ') {
+                        if (makeMove(row - 1, col - 1, 'X')) {
+                            validMove = true;
+                        } else {
+                            System.out.println("Unexpected error in making the move.");
+                        }
                     } else {
-                        System.out.println("Invalid move, try again.");
-                        firstPlay(inputPath,outputPath);
+                        System.out.println("Invalid move, cell is already occupied. Waiting for new move.");
+                        // Here, since validMove is still false, the while loop will continue, asking for a new valid move
                     }
                 }
 
@@ -242,20 +255,18 @@ public class ChessGame {
 
         long timeLimit = 8000; // Set a time limit of 8 seconds
         long startTime = System.currentTimeMillis(); // Record the start time
-
+        List<int[]> moves = new ArrayList<>();
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                if (board[i][j] == ' ') {
+                    moves.add(new int[] {i, j});
+                }
+            }
+        }
         while (true) {
             int currentBestScore = Integer.MIN_VALUE;
             int[] currentBestMove = new int[2];
 
-            // Create a list of all possible moves
-            List<int[]> moves = new ArrayList<>();
-            for (int i = 0; i < n; i++) {
-                for (int j = 0; j < n; j++) {
-                    if (board[i][j] == ' ') {
-                        moves.add(new int[] {i, j});
-                    }
-                }
-            }
 
             // Order the moves using some heuristic
             Collections.sort(moves, new Comparator<int[]>() {
@@ -408,8 +419,8 @@ public class ChessGame {
             // "Jumped" threes for the AI
             if (aiPoints == 3 && gapCount == 1) return 2000;
             if (humanPoints == 3 && gapCount == 1) return -1600;
-            if (aiPoints == 4 && gapCount == 1) return 4000;
-            if (humanPoints == 4 && gapCount == 1) return -3200;
+            if (aiPoints == 4 && gapCount == 1) return 6000;
+            if (humanPoints == 4 && gapCount == 1) return -4200;
         }
 
         // Default case: evaluate based on difference of AI and human points, considering if line is open
