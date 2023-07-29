@@ -48,7 +48,7 @@ public class ChessStream {
             synchronized (this){
                 while (true) {
                     try {
-                        Thread.sleep(100);
+                        Thread.sleep(50);
                     } catch (InterruptedException ignored) {
                         // When Checker have be interrupted Unexpectedly
                     }
