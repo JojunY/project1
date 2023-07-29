@@ -59,8 +59,8 @@ public class ChessStream {
                         System.out.println("Waiting for opposite's reply,Please check only one file in folder " + FolderPath);
                         break;
                     }
+                    ReadTimerFlag = -1;
                 }
-                ReadTimerFlag = -1;
             }
         });
         Checker.start();
